@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AtomicBank Core</title>
+    <style>
+        body {
+            background-color: #0a0a0a;
+            color: #ffffff;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 0 24px;
+            box-sizing: border-box;
+        }
+        .header {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 40px;
+        }
+        .logo { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+        .status-badge {
+            background-color: #1a1a1a;
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            font-size: 10px;
+            font-weight: 700;
+            color: #00ffcc;
+            letter-spacing: 1px;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #00ffcc;
+            margin-right: 6px;
+            box-shadow: 0 0 8px rgba(0, 255, 204, 0.4);
+        }
+        .balance-card { margin-top: 120px; text-align: center; }
+        .label {
+            color: #666666;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+        .balance-text {
+            font-size: 64px;
+            font-weight: 300;
+            letter-spacing: -2px;
+            opacity: 0; /* Hidden initially for fade-in */
+            transition: opacity 0.8s ease-out;
+        }
+        .fade-in { opacity: 1; }
+        .action-section { margin-top: auto; margin-bottom: 60px; text-align: center; }
+        .transfer-btn {
+            background-color: #ffffff;
+            color: #000000;
+            border: none;
+            padding: 20px;
+            width: 300px;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+        }
+        .transfer-btn:active { transform: scale(0.95); }
+        .transfer-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        .helper-text { color: #444444; font-size: 12px; margin-top: 16px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo">⚛️ AtomicBank</div>
+        <div class="status-badge">
+            <div class="status-dot"></div>CORE ONLINE
+        </div>
+    </div>
+
+    <div class="balance-card">
+        <div class="label">TOTAL BALANCE</div>
+        <div class="balance-text" id="balanceDisplay">$0.00</div>
+    </div>
+
+    <div class="action-section">
+        <button class="transfer-btn" id="transferBtn" onclick="executeTransfer()">SEND $50.00</button>
+        <div class="helper-text">Transfers execute instantly via Ledger Event Bus.</div>
+    </div>
+
+    <script>
+        const MOCK_TOKEN = 'Bearer mock_token_data';
+        const balanceDisplay = document.getElementById('balanceDisplay');
+        const transferBtn = document.getElementById('transferBtn');
+
+        // Fetch balance from the Go API
+        async function fetchBalance() {
+            try {
+                const response = await fetch('/api/v1/balance', {
+                    headers: { 'Authorization': MOCK_TOKEN }
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    balanceDisplay.innerText = '$' + parseFloat(data.balance).toFixed(2);
+                    balanceDisplay.classList.add('fade-in');
+                }
+            } catch (error) {
+                console.error("Failed to fetch balance", error);
+                balanceDisplay.innerText = 'ERROR';
+                balanceDisplay.classList.add('fade-in');
+            }
+        }
+
+        // Trigger the transfer
+        async function executeTransfer() {
+            transferBtn.innerText = 'PROCESSING...';
+            transferBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/v1/transfers', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': MOCK_TOKEN,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        to_account_id: '22222222-2222-2222-2222-222222222222',
+                        amount: 50.00
+                    })
+                });
+
+                if (response.ok) {
+                    await fetchBalance(); // Instantly visually update balance
+                } else {
+                    const errorData = await response.json();
+                    alert('Transfer Failed: ' + errorData.error);
+                }
+            } catch (error) {
+                alert('Network Error');
+            } finally {
+                transferBtn.innerText = 'SEND $50.00';
+                transferBtn.disabled = false;
+            }
+        }
+
+        // Boot up
+        fetchBalance();
+    </script>
+</body>
+</html>

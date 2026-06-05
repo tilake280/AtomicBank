@@ -1,0 +1,31 @@
+# Compiled Go Binaries
+# (If you run 'go build', it creates an executable file we don't want in Git)
+/atomicbank
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Environment Variables & Secrets
+# (For when you inevitably move your DB password out of main.go)
+.env
+.env.*
+*.local
+
+# IDE and Editor Folders
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-Specific Junk
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
